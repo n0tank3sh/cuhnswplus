@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.29)
+
+project(cuhnsw LANGUAGES CUDA CXX)
+find_package(CUDAToolkit REQUIRED)
+add_subdirectory(tests)
+add_subdirectory(cpp)
+add_subdirectory(3rd/json11)
+add_subdirectory(3rd/spdlog)
+add_subdirectory(3rd/gtest)
+add_subdirectory(3rd/cccl)

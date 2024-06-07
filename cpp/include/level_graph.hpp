@@ -22,8 +22,9 @@ namespace cuhnsw {
 
 class LevelGraph {
  public:
-  LevelGraph() {
+  explicit LevelGraph(int max_elements = 0) {
     logger_ = CuHNSWLogger().get_logger();
+    nodes_idmap_.resize(max_elements , -1);
   }
 
   ~LevelGraph() {}
@@ -33,10 +34,16 @@ class LevelGraph {
     num_nodes_ = nodes_.size();
     neighbors_.clear();
     neighbors_.resize(num_nodes_);
-    nodes_idmap_.resize(num_data);
     std::fill(nodes_idmap_.begin(), nodes_idmap_.end(), -1);
     for (int i = 0; i < num_nodes_; ++i)
       nodes_idmap_[nodes[i]] = i;
+  }
+
+  void AddNode(int node) {
+    num_nodes_++;
+    nodes_.push_back(node);
+    neighbors_.resize(nodes_.size());
+    nodes_idmap_[node] = nodes_.size() - 1;
   }
 
   const std::vector<std::pair<float, int>>& GetNeighbors(int node) const  {
@@ -85,6 +92,7 @@ class LevelGraph {
   std::vector<int> nodes_;
   std::vector<std::vector<std::pair<float, int>>> neighbors_;
   int num_nodes_ = 0;
+  int max_elements = 0;
   std::vector<int> nodes_idmap_;
 };  // class LevelGraph
 

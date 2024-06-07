@@ -63,8 +63,10 @@ class CuHNSW {
 
   bool Init(std::string opt_path);
   void SetData(const float* data, int num_data, int num_dims);
+  void SetDims(int dims);
   void SetRandomLevels(const int* levels);
   void BuildGraph();
+  void AddPoint(const float* qdata, int level, int label);
   void SaveIndex(std::string fpath);
   void LoadIndex(std::string fpath);
   void SearchGraph(const float* qdata, const int num_queries, const int topk, const int ef_search,
@@ -86,13 +88,14 @@ class CuHNSW {
   void BuildLevelGraph(int level);
   std::vector<LevelGraph> level_graphs_;
   std::vector<int> levels_;
+  std::mt19937 level_generator;
 
   json11::Json opt_;
   std::shared_ptr<spdlog::logger> logger_;
 
-  int num_data_, num_dims_, batch_size_;
+  int num_data_ = 0, num_dims_, batch_size_;
   thrust::device_vector<cuda_scalar> device_data_, device_qdata_;
-  const float* data_;
+  std::vector<int> data_;
   std::vector<int> labels_;
   bool labelled_ = false;
   bool reverse_cand_ = false;
@@ -100,7 +103,8 @@ class CuHNSW {
   int major_, minor_, cores_, devId_, mp_cnt_;
   int block_cnt_, block_dim_;
   int visited_table_size_, visited_list_size_;
-  int max_level_, max_m_, max_m0_;
+  int max_level_ = -1, max_m_, max_m0_;
+  int max_elements_ = 0;
   int enter_point_, ef_construction_;
   float level_mult_;
   int dist_type_;

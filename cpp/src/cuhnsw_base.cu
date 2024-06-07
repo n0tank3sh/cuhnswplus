@@ -74,6 +74,8 @@ bool CuHNSW::Init(std::string opt_path) {
   auto _opt = json11::Json::parse(str, err_cmt);
   if (not err_cmt.empty()) return false;
   opt_ = _opt;
+  std::cout << "Json file: " << std::endl;
+  std::cout << opt_.dump() << std::endl;
   max_m_ = opt_["max_m"].int_value();
   max_m0_ = opt_["max_m0"].int_value();
   save_remains_ = opt_["save_remains"].bool_value();
@@ -82,7 +84,12 @@ bool CuHNSW::Init(std::string opt_path) {
   batch_size_ = opt_["batch_size"].int_value();
   block_dim_ = opt_["block_dim"].int_value();
   visited_table_size_ = opt_["visited_table_size"].int_value();
-  visited_list_size_ = opt_["visited_list_size"].int_value();
+  visited_list_size_ = opt_["visited_list_size"].int_value(); 
+  block_cnt_ = opt_["hyper_threads"].number_value() * (cores_ / block_dim_);
+  max_elements_ = opt_["max_elements"].int_value();
+  std::cout << max_elements_ <<std::endl;
+  std::cout << max_m_ << std::endl;
+
   if (not visited_table_size_)
     visited_table_size_ = visited_list_size_ * 2;
   heuristic_coef_ = opt_["heuristic_coef"].number_value();
@@ -108,9 +115,6 @@ bool CuHNSW::Init(std::string opt_path) {
 void CuHNSW::SetData(const float* data, int num_data, int num_dims) {
   num_data_ = num_data;
   num_dims_ = num_dims;
-  block_cnt_ = opt_["hyper_threads"].number_value() * (cores_ / block_dim_);
-  DEBUG("copy data ({} x {}), block_cnt: {}, block_dim: {}",
-      num_data, num_dims, block_cnt_, block_dim_);
   device_data_.resize(num_data * num_dims);
   #ifdef HALF_PRECISION
     // DEBUG0("fp16")
@@ -124,7 +128,7 @@ void CuHNSW::SetData(const float* data, int num_data, int num_dims) {
     // DEBUG0("fp32")
     thrust::copy(data, data + num_data * num_dims, device_data_.begin());
   #endif
-  data_ = data;
+  data_.assign(data, data + num_dims * num_data_);
 }
 
 void CuHNSW::SetRandomLevels(const int* levels) {
@@ -148,7 +152,7 @@ void CuHNSW::SetRandomLevels(const int* levels) {
         i, level_nodes[i].size());
   level_graphs_.clear();
   for (int i = 0; i <= max_level_; ++i) {
-    LevelGraph graph = LevelGraph();
+    LevelGraph graph = LevelGraph(num_data_);
     graph.SetNodes(level_nodes[i],
         num_data_, ef_construction_);
     level_graphs_.push_back(graph);

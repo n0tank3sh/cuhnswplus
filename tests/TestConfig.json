@@ -1,0 +1,15 @@
+
+ {
+  "seed" : 777,
+  "c_log_level" : 2,
+  "max_m" : 12,
+  "max_m0" : 24,
+  "ef_construction" :  150,
+  "max_elements" : 10000,
+  "level_mult" : 9,
+  "hyper_threads" : 10,
+  "block_dim" : 32,
+  "dist_type" : "dot",
+  "visited_list_size" : 8192,
+  "heuristic_coef" : 0.25
+}

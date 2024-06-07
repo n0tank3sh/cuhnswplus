@@ -140,7 +140,7 @@ cuda_scalar GetDistance2(const int src, const int dst, const int num_dims,
 }
 
 
-__global__ void BatchDistanceKernel(
+__inline__ __device__ void BatchDistanceKernel(
     const cuda_scalar* data, const int* src, const int* dst,
     const int size, const int num_dims, const int dist_type,
     float* distances) {
