@@ -22,6 +22,72 @@ void CuHNSW::GetDeviceInfo() {
   minor_ = prop.minor;
   cores_ = -1;
 }
+inline int GetCores(int major, int minor, int mp_cnt) {      
+  int cores = -1;
+  switch (major){
+    case 2: // Fermi
+      if (minor == 1) 
+        cores = mp_cnt * 48;
+      else 
+        cores = mp_cnt * 32;
+      break;
+    case 3: // Kepler
+      cores = mp_cnt * 192;
+      break;
+    case 5: // Maxwell
+      cores = mp_cnt * 128;
+      break;
+    case 6: // Pascal
+      if (minor == 1 or minor == 2) 
+        cores = mp_cnt * 128;
+      else if (minor == 0) 
+        cores = mp_cnt * 64;
+      else 
+      //  DEBUG0("Unknown device type");
+      break;
+    case 7: // Volta and Turing
+      if (minor == 0 or minor == 5) 
+        cores = mp_cnt * 64;
+      else 
+     //   DEBUG0("Unknown device type");
+      break;
+    case 8: // Ampere
+      if (minor == 0) 
+        cores = mp_cnt * 64;
+      else if (minor == 6) 
+        cores = mp_cnt * 128;
+      else 
+    //    DEBUG0("Unknown device type");
+      break;
+    default:
+   //   DEBUG0("Unknown device type"); 
+      break;
+  }
+  if (cores == -1) cores = mp_cnt * 128;
+  return cores;
+}
+void CuHNSW::SelectGPU(int gpu_id) {
+  if(gpus.size() == 0) {
+    int dcount = 0;
+    CHECK_CUDA(cudaGetDeviceCount(&dcount));
+    int device;
+    gpus.resize(dcount);
+    cudaDeviceProp prop;
+    for(int i = 0; i < dcount; i++) {
+      CHECK_CUDA(cudaSetDevice(i));
+      CHECK_CUDA(cudaGetDevice(&device));
+      CHECK_CUDA(cudaGetDeviceProperties(&prop, device));
+      int mp_cnt = prop.multiProcessorCount;
+      int major = prop.major;
+      int minor = prop.minor; 
+      int block_cnt = opt_["hyper_threads"].number_value() * (GetCores(major, minor, mp_cnt) / block_dim_);
+      gpus[i] = block_cnt;
+    }
+  }
+  assert(gpu_id < gpus.size());
+  CHECK_CUDA(cudaSetDevice(gpu_id));
+  block_cnt_ = gpus[gpu_id];
+}
 
 void CuHNSW::SetDims(int dims) {
   num_dims_ = dims;
@@ -159,6 +225,8 @@ void CuHNSW::AddPoint(const float* qdata, int level, int label) {
   if(level == -1) {
     level = (int)(-std::log(std::uniform_real_distribution(0.0, 1.0)(level_generator)) * level_mult_);
   }
+  levels_.resize(num_data_ + 1);
+  levels_[num_data_] = level;
   if(level > max_level_) {
     enter_point_ = num_data_;
     max_level_ = level;

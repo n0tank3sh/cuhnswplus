@@ -1,4 +1,5 @@
 .cache/
 .vscode/
+env/
 build/
 3rd/

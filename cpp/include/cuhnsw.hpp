@@ -69,6 +69,7 @@ class CuHNSW {
   void AddPoint(const float* qdata, int level, int label);
   void SaveIndex(std::string fpath);
   void LoadIndex(std::string fpath);
+  void SelectGPU(int gpu_id);
   void SearchGraph(const float* qdata, const int num_queries, const int topk, const int ef_search,
     int* nns, float* distances, int* found_cnt);
 
@@ -95,6 +96,7 @@ class CuHNSW {
 
   int num_data_ = 0, num_dims_, batch_size_;
   thrust::device_vector<cuda_scalar> device_data_, device_qdata_;
+  std::vector<uint32_t> gpus;
   std::vector<int> data_;
   std::vector<int> labels_;
   bool labelled_ = false;

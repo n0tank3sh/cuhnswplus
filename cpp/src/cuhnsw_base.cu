@@ -5,6 +5,7 @@
 // LICENSE file in the root directory of this source tree.
 #include <iostream>
 #include <algorithm>
+#include <thread>
 
 #include "cuhnsw.hpp"
 
