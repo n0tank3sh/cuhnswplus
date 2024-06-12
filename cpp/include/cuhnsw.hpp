@@ -67,6 +67,7 @@ class CuHNSW {
   void SetRandomLevels(const int* levels);
   void BuildGraph();
   void AddPoint(const float* qdata, int level, int label);
+  void AddPoints(const float* qdata, int* levels, int* labels, int num_points);
   void SaveIndex(std::string fpath);
   void LoadIndex(std::string fpath);
   void SelectGPU(int gpu_id);

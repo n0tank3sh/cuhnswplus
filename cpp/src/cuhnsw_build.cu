@@ -235,7 +235,15 @@ void CuHNSW::AddPoint(const float* qdata, int level, int label) {
   for(int i = 0; i <= level; i++) {
     level_graphs_[i].AddNode(num_data_);
   }
+  if(labelled_) {
+    labels_.push_back(label);
+  }
   num_data_++;
+}
+void CuHNSW::AddPoints(const float* qdata, int* levels, int* labels, int num_points) {
+  for(int i = 0; i < num_points; i++) {
+    AddPoint(qdata + i * num_dims_, levels[i], labels[i]);
+  }
 }
 
 } // namespace cuhnsw
