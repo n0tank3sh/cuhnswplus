@@ -133,8 +133,7 @@ void CuHNSW::BuildLevelGraph(int level) {
   // initialize entries
   std::vector<int> entries(new_nodes.size(), enter_point_);
 
-  for (int l = max_level_; l > level; --l)
-    GetEntryPoints(new_nodes, entries, l, false);
+  GetEntryPoints(new_nodes, entries, level, false);
   for (int i = 0; i < new_nodes.size(); ++i) {
     int srcid = graph.GetNodeId(new_nodes[i]);
     int dstid = graph.GetNodeId(entries[i]);
