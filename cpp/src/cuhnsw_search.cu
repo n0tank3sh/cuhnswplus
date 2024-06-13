@@ -9,8 +9,6 @@ void CuHNSW::GetEntryPoints(
   
   // process input data for kernel
   int max_size = level_graphs_[level].GetNodes().size();
-  if(level != max_level_)
-    entries.resize(level_graphs_[level + 1].GetNodes().size());
 
   
   // copy to gpu mem
@@ -76,7 +74,6 @@ void CuHNSW::GetEntryPoints(
     for (int i = 0; i < size; ++i) {
       entries[i] = upper_nodes[entries[i]];
     }
-    entries.resize(size);
   }
 }
 

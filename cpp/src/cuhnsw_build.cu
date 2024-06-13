@@ -96,113 +96,119 @@ void CuHNSW::SetDims(int dims) {
 
 void CuHNSW::BuildGraph() {
   visited_ = new bool[batch_size_ * num_data_];
-  for (int level = max_level_; level >= 0; --level) {
-    DEBUG("build graph of level: {}", level);
-    BuildLevelGraph(level);
-  }
+  //for (int level = max_level_; level >= 0; --level) {
+  //  DEBUG("build graph of level: {}", level);
+  //  BuildLevelGraph(level);
+  //}
+  BuildLevelGraph(0);
 }
 
 void CuHNSW::BuildLevelGraph(int level) {
-  std::set<int> upper_nodes;
-  std::vector<int> new_nodes;
-  LevelGraph& graph = level_graphs_[level];
-  const std::vector<int>& nodes = graph.GetNodes();
-  int size = nodes.size();
-  int max_m = level > 0? max_m_: max_m0_;
-  thrust::host_vector<int> graph_vec(size * max_m, 0);
-  thrust::host_vector<int> deg(size, 0);
-  if (level < max_level_) {
-    LevelGraph& upper_graph = level_graphs_[level + 1];
-    for (auto& node: upper_graph.GetNodes()) {
-      upper_nodes.insert(node);
-      int srcid = graph.GetNodeId(node);
-      int idx = 0;
-      for (auto& nb: upper_graph.GetNeighbors(node)) {
-        int dstid = graph.GetNodeId(nb.second);
-        graph_vec[max_m * srcid + (idx++)] = dstid;
-      }
-      deg[srcid] = idx;
-    }
-  }
-
-  for (auto& node: graph.GetNodes()) {
-    if (upper_nodes.count(node)) continue;
-    new_nodes.push_back(node);
-  }
   
-  // initialize entries
-  std::vector<int> entries(new_nodes.size(), enter_point_);
-
-  GetEntryPoints(new_nodes, entries, level, false);
-  for (int i = 0; i < new_nodes.size(); ++i) {
-    int srcid = graph.GetNodeId(new_nodes[i]);
-    int dstid = graph.GetNodeId(entries[i]);
-    graph_vec[max_m * srcid] = dstid;
-    deg[srcid] = 1;
-  }
-
-  thrust::device_vector<int> device_graph(max_m * size);
-  thrust::device_vector<float> device_distances(max_m * size);
-  thrust::device_vector<int> device_deg(size);
-  thrust::device_vector<int> device_nodes(size);
+  int max_size = level_graphs_[0].GetNodes().size();
+  thrust::device_vector<int> device_graph(max_m0_ * max_size);
+  thrust::device_vector<float> device_distances(max_m0_ * max_size);
+  thrust::device_vector<int> device_deg(max_size);
+  thrust::device_vector<int> device_nodes(max_size);
   thrust::device_vector<int> device_visited_table(visited_table_size_ * block_cnt_, -1);
   thrust::device_vector<int> device_visited_list(visited_list_size_ * block_cnt_);
-  thrust::device_vector<int> device_mutex(size, 0);
+  thrust::device_vector<int> device_mutex(max_size, 0);
   thrust::device_vector<int64_t> device_acc_visited_cnt(block_cnt_, 0);
   thrust::device_vector<Neighbor> device_neighbors(ef_construction_ * block_cnt_);
   thrust::device_vector<int> device_cand_nodes(ef_construction_ * block_cnt_);
   thrust::device_vector<cuda_scalar> device_cand_distances(ef_construction_ * block_cnt_);
-  thrust::device_vector<int> device_backup_neighbors(max_m * block_cnt_);
-  thrust::device_vector<cuda_scalar> device_backup_distances(max_m * block_cnt_);
-  thrust::device_vector<bool> device_went_through_heuristic(size, false);
+  thrust::device_vector<int> device_backup_neighbors(max_m0_ * block_cnt_);
+  thrust::device_vector<cuda_scalar> device_backup_distances(max_m0_ * block_cnt_);
+  thrust::device_vector<bool> device_went_through_heuristic(max_size, false);
 
-  thrust::copy(graph_vec.begin(), graph_vec.end(), device_graph.begin());
-  thrust::copy(deg.begin(), deg.end(), device_deg.begin());
-  thrust::copy(nodes.begin(), nodes.end(), device_nodes.begin());
+  for(int l = max_level_; l >= 0; l--) {
+    std::set<int> upper_nodes;
+    std::vector<int> new_nodes;
+    LevelGraph& graph = level_graphs_[l];
+    const std::vector<int>& nodes = graph.GetNodes();
+    int size = nodes.size();  
+    int max_m = l > 0? max_m_: max_m0_;
 
-  BuildLevelGraphKernel<<<block_cnt_, block_dim_>>>(
-    thrust::raw_pointer_cast(device_data_.data()),
-    thrust::raw_pointer_cast(device_nodes.data()),
-    num_dims_, size, max_m, dist_type_, save_remains_,
-    ef_construction_,
-    thrust::raw_pointer_cast(device_graph.data()),
-    thrust::raw_pointer_cast(device_distances.data()),
-    thrust::raw_pointer_cast(device_deg.data()),
-    thrust::raw_pointer_cast(device_visited_table.data()),
-    thrust::raw_pointer_cast(device_visited_list.data()),
-    visited_table_size_, visited_list_size_,
-    thrust::raw_pointer_cast(device_mutex.data()),
-    thrust::raw_pointer_cast(device_acc_visited_cnt.data()),
-    reverse_cand_,
-    thrust::raw_pointer_cast(device_neighbors.data()),
-    thrust::raw_pointer_cast(device_cand_nodes.data()),
-    thrust::raw_pointer_cast(device_cand_distances.data()),
-    heuristic_coef_,
-    thrust::raw_pointer_cast(device_backup_neighbors.data()),
-    thrust::raw_pointer_cast(device_backup_distances.data()),
-    thrust::raw_pointer_cast(device_went_through_heuristic.data())
-    );
-  CHECK_CUDA(cudaDeviceSynchronize());
-  thrust::copy(device_deg.begin(), device_deg.end(), deg.begin());
-  thrust::copy(device_graph.begin(), device_graph.end(), graph_vec.begin());
-  std::vector<float> distances(max_m * size);
-  thrust::copy(device_distances.begin(), device_distances.end(), distances.begin());
+    std::vector<int> graph_vec(size * max_m, 0);
+    std::vector<int> deg(size, 0);
+    if (l < max_level_) {
+      LevelGraph& upper_graph = level_graphs_[l + 1];
+      for (auto& node: upper_graph.GetNodes()) {
+        upper_nodes.insert(node);
+        int srcid = graph.GetNodeId(node);
+        int idx = 0;
+        for (auto& nb: upper_graph.GetNeighbors(node)) {
+          int dstid = graph.GetNodeId(nb.second);
+          graph_vec[max_m * srcid + (idx++)] = dstid;
+        }
+        deg[srcid] = idx;
+      }
+    }
 
-  std::vector<int64_t> acc_visited_cnt(block_cnt_);
-  thrust::copy(device_acc_visited_cnt.begin(), device_acc_visited_cnt.end(), acc_visited_cnt.begin());
-  CHECK_CUDA(cudaDeviceSynchronize());
-  int64_t full_visited_cnt = std::accumulate(acc_visited_cnt.begin(), acc_visited_cnt.end(), 0LL);
-  DEBUG("full number of visited nodes: {}", full_visited_cnt);
+    for (auto& node: graph.GetNodes()) {
+      if (upper_nodes.count(node)) continue;
+      new_nodes.push_back(node);
+    }
+  
+    // initialize entries
+    std::vector<int> entries(new_nodes.size(), enter_point_);
 
-  for (auto& node: graph.GetNodes()) {
-    graph.ClearEdges(node);
-  }
-  for (int i = 0; i < size; ++i) {
-    int src = nodes[i];
-    for (int j = 0; j < deg[i]; ++j) {
-      int dst = nodes[graph_vec[i * max_m + j]];
-      float dist = distances[i * max_m + j];
-      graph.AddEdge(src, dst, dist);
+    GetEntryPoints(new_nodes, entries, l, false);
+    for (int i = 0; i < new_nodes.size(); ++i) {
+      int srcid = graph.GetNodeId(new_nodes[i]);
+      int dstid = graph.GetNodeId(entries[i]);
+      graph_vec[max_m * srcid] = dstid;
+      deg[srcid] = 1;
+    }
+
+    thrust::copy(graph_vec.begin(), graph_vec.end(), device_graph.begin());
+    thrust::copy(deg.begin(), deg.end(), device_deg.begin());
+    thrust::copy(nodes.begin(), nodes.end(), device_nodes.begin());
+
+    BuildLevelGraphKernel<<<block_cnt_, block_dim_>>>(
+      thrust::raw_pointer_cast(device_data_.data()),
+      thrust::raw_pointer_cast(device_nodes.data()),
+      num_dims_, size, max_m, dist_type_, save_remains_,
+      ef_construction_,
+      thrust::raw_pointer_cast(device_graph.data()),
+      thrust::raw_pointer_cast(device_distances.data()),
+      thrust::raw_pointer_cast(device_deg.data()),
+      thrust::raw_pointer_cast(device_visited_table.data()),
+      thrust::raw_pointer_cast(device_visited_list.data()),
+      visited_table_size_, visited_list_size_,
+      thrust::raw_pointer_cast(device_mutex.data()),
+      thrust::raw_pointer_cast(device_acc_visited_cnt.data()),
+      reverse_cand_,
+      thrust::raw_pointer_cast(device_neighbors.data()),
+      thrust::raw_pointer_cast(device_cand_nodes.data()),
+      thrust::raw_pointer_cast(device_cand_distances.data()),
+      heuristic_coef_,
+      thrust::raw_pointer_cast(device_backup_neighbors.data()),
+      thrust::raw_pointer_cast(device_backup_distances.data()),
+      thrust::raw_pointer_cast(device_went_through_heuristic.data())
+      );
+    CHECK_CUDA(cudaDeviceSynchronize());
+    thrust::copy(device_deg.begin(), device_deg.begin() + deg.size(), deg.begin());
+    thrust::copy(device_graph.begin(), device_graph.begin() + graph_vec.size(), graph_vec.begin());
+    std::vector<float> distances(max_m * size);
+    thrust::copy(device_distances.begin(), device_distances.begin() + distances.size(), distances.begin());
+
+    std::vector<int64_t> acc_visited_cnt(block_cnt_);
+    thrust::copy(device_acc_visited_cnt.begin(), device_acc_visited_cnt.end(), acc_visited_cnt.begin());
+    CHECK_CUDA(cudaDeviceSynchronize());
+    int64_t full_visited_cnt = std::accumulate(acc_visited_cnt.begin(), acc_visited_cnt.end(), 0LL);
+    DEBUG("full number of visited nodes: {}", full_visited_cnt);
+
+    for (auto& node: graph.GetNodes()) {
+      graph.ClearEdges(node);
+    }
+    for (int i = 0; i < size; ++i) {
+      int src = nodes[i];
+      for (int j = 0; j < deg[i]; ++j) {
+        int dst = nodes[graph_vec[i * max_m + j]];
+        float dist = distances[i * max_m + j];
+        graph.AddEdge(src, dst, dist);
+      }
     }
   }
 }
