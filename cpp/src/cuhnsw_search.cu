@@ -8,66 +8,72 @@ void CuHNSW::GetEntryPoints(
   int size = nodes.size();
   
   // process input data for kernel
-  LevelGraph& graph = level_graphs_[level];
-  const std::vector<int>& upper_nodes = graph.GetNodes();
-  int upper_size = upper_nodes.size();
-  std::vector<int> deg(upper_size);
-  std::vector<int> neighbors(upper_size * max_m_);
-  for (int i = 0; i < upper_size; ++i) {
-    const std::vector<std::pair<float, int>>& _neighbors = graph.GetNeighbors(upper_nodes[i]);
-    deg[i] = _neighbors.size();
-    int offset = max_m_ * i;
-    for (int j = 0; j < deg[i]; ++j) {
-      neighbors[offset + j] = graph.GetNodeId(_neighbors[j].second);
-    }
-  }
-  for (int i = 0; i < size; ++i) {
-    int entryid = graph.GetNodeId(entries[i]); 
-    entries[i] = entryid;
-  }
+  int max_size = level_graphs_[level].GetNodes().size();
+
   
   // copy to gpu mem
-  thrust::device_vector<int> dev_nodes(size), dev_entries(size);
-  thrust::device_vector<int> dev_upper_nodes(upper_size), dev_deg(upper_size);
-  thrust::device_vector<int> dev_neighbors(upper_size * max_m_);
-  thrust::copy(nodes.begin(), nodes.end(), dev_nodes.begin());
-  thrust::copy(entries.begin(), entries.end(), dev_entries.begin());
-  thrust::copy(upper_nodes.begin(), upper_nodes.end(), dev_upper_nodes.begin());
-  thrust::copy(deg.begin(), deg.end(), dev_deg.begin());
-  thrust::copy(neighbors.begin(), neighbors.end(), dev_neighbors.begin());
-  
-  thrust::device_vector<bool> dev_visited(upper_size * block_cnt_, false);
+  thrust::device_vector<int> dev_nodes(max_size), dev_entries(max_size);
+  thrust::device_vector<int> dev_upper_nodes(max_size), dev_deg(max_size);
+  thrust::device_vector<int> dev_neighbors(max_size * max_m_);
+ 
+  thrust::device_vector<bool> dev_visited(max_size * block_cnt_, false);
   thrust::device_vector<int> dev_visited_list(visited_list_size_ * block_cnt_);
   thrust::device_vector<int64_t> dev_acc_visited_cnt(block_cnt_, 0);
   thrust::device_vector<cuda_scalar>& qdata = search? device_qdata_: device_data_;
 
   // run kernel
-  GetEntryPointsKernel<<<block_cnt_, block_dim_>>>(
-    thrust::raw_pointer_cast(qdata.data()),
-    thrust::raw_pointer_cast(dev_nodes.data()),
-    thrust::raw_pointer_cast(device_data_.data()),
-    thrust::raw_pointer_cast(dev_upper_nodes.data()),
-    num_dims_, size, upper_size, max_m_, dist_type_,
-    thrust::raw_pointer_cast(dev_neighbors.data()),
-    thrust::raw_pointer_cast(dev_deg.data()),
-    thrust::raw_pointer_cast(dev_visited.data()),
-    thrust::raw_pointer_cast(dev_visited_list.data()),
-    visited_list_size_,
-    thrust::raw_pointer_cast(dev_entries.data()),
-    thrust::raw_pointer_cast(dev_acc_visited_cnt.data())
-    );
-  CHECK_CUDA(cudaDeviceSynchronize());
-  // el_[GPU] += sw_[GPU].CheckPoint();
-  thrust::copy(dev_entries.begin(), dev_entries.end(), entries.begin());
-  std::vector<int64_t> acc_visited_cnt(block_cnt_);
-  thrust::copy(dev_acc_visited_cnt.begin(), dev_acc_visited_cnt.end(), acc_visited_cnt.begin());
-  CHECK_CUDA(cudaDeviceSynchronize());
-  int64_t full_visited_cnt = std::accumulate(acc_visited_cnt.begin(), acc_visited_cnt.end(), 0);
-  DEBUG("full visited cnt: {}", full_visited_cnt);
+  for(int l = max_level_; l > level; l--) {   
+    const std::vector<int>& nodes = level_graphs_[l - 1].GetNodes();
+    LevelGraph& graph = level_graphs_[l];
+    const std::vector<int>& upper_nodes = graph.GetNodes();
+    int upper_size = upper_nodes.size();
+    std::vector<int> deg(upper_size);
+    std::vector<int> neighbors(upper_size * max_m_);
+    for (int i = 0; i < upper_size; ++i) {
+      const std::vector<std::pair<float, int>>& _neighbors = graph.GetNeighbors(upper_nodes[i]);
+      deg[i] = _neighbors.size();
+      int offset = max_m_ * i;
+      for (int j = 0; j < deg[i]; ++j) {
+        neighbors[offset + j] = graph.GetNodeId(_neighbors[j].second);
+      }
+    }
+    for (int i = 0; i < size; ++i) {
+      int entryid = graph.GetNodeId(entries[i]); 
+      entries[i] = entryid;
+    }
+    thrust::copy(nodes.begin(), nodes.end(), dev_nodes.begin());
+    thrust::copy(entries.begin(), entries.end(), dev_entries.begin());
+    thrust::copy(upper_nodes.begin(), upper_nodes.end(), dev_upper_nodes.begin());
+    thrust::copy(deg.begin(), deg.end(), dev_deg.begin());
+    thrust::copy(neighbors.begin(), neighbors.end(), dev_neighbors.begin());
   
-  // set output
-  for (int i = 0; i < size; ++i) {
-    entries[i] = upper_nodes[entries[i]];
+    GetEntryPointsKernel<<<block_cnt_, block_dim_>>>(
+      thrust::raw_pointer_cast(qdata.data()),
+      thrust::raw_pointer_cast(dev_nodes.data()),
+      thrust::raw_pointer_cast(device_data_.data()),
+      thrust::raw_pointer_cast(dev_upper_nodes.data()),
+      num_dims_, size, upper_size, max_m_, dist_type_,
+      thrust::raw_pointer_cast(dev_neighbors.data()),
+      thrust::raw_pointer_cast(dev_deg.data()),
+      thrust::raw_pointer_cast(dev_visited.data()),
+      thrust::raw_pointer_cast(dev_visited_list.data()),
+      visited_list_size_,
+      thrust::raw_pointer_cast(dev_entries.data()),
+      thrust::raw_pointer_cast(dev_acc_visited_cnt.data())
+      );
+    CHECK_CUDA(cudaDeviceSynchronize());
+    // el_[GPU] += sw_[GPU].CheckPoint();
+    thrust::copy(dev_entries.begin(), dev_entries.begin() + entries.size(), entries.begin());
+    std::vector<int64_t> acc_visited_cnt(block_cnt_);
+    thrust::copy(dev_acc_visited_cnt.begin(), dev_acc_visited_cnt.end(), acc_visited_cnt.begin());
+    CHECK_CUDA(cudaDeviceSynchronize());
+    int64_t full_visited_cnt = std::accumulate(acc_visited_cnt.begin(), acc_visited_cnt.end(), 0);
+    DEBUG("full visited cnt: {}", full_visited_cnt);
+  
+    // set output
+    for (int i = 0; i < size; ++i) {
+      entries[i] = upper_nodes[entries[i]];
+    }
   }
 }
 
@@ -85,8 +91,7 @@ void CuHNSW::SearchGraph(const float* qdata, const int num_queries, const int to
   std::vector<int> qnodes(num_queries);
   std::iota(qnodes.begin(), qnodes.end(), 0);
   std::vector<int> entries(num_queries, enter_point_);
-  for (int l = max_level_; l > 0; --l)
-    GetEntryPoints(qnodes, entries, l, true);
+  GetEntryPoints(qnodes, entries, 0, true);
   std::vector<int> graph_vec(max_m0_ * num_data_);
   std::vector<int> deg(num_data_);
   LevelGraph graph = level_graphs_[0];
