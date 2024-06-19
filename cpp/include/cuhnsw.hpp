@@ -21,6 +21,7 @@
 #include <utility>
 #include <queue>
 #include <deque>
+#include <string>
 #include <functional>
 #include <vector>
 #include <cmath>
@@ -100,11 +101,13 @@ class CuHNSW {
   std::vector<uint32_t> gpus;
   std::vector<int> data_;
   std::vector<int> labels_;
+  std::string dir;
   bool labelled_ = false;
   bool reverse_cand_ = false;
 
   int major_, minor_, cores_, devId_, mp_cnt_;
   int block_cnt_, block_dim_;
+  int shard_size;
   int visited_table_size_, visited_list_size_;
   int max_level_ = -1, max_m_, max_m0_;
   int max_elements_ = 0;
@@ -119,4 +122,16 @@ class CuHNSW {
   bool* visited_;
 };  // class CuHNSW
 
+class Index {
+    int shard_size;
+    int clusters;
+    std::string storage_prefix, config_file;
+    std::vector<CuHNSW> graphs;
+    std::vector<int> index;
+public:
+    Index(std::string storage_prefix, std::string config_file, int shard_size);
+    void SetData(const float* data, int num_data, int dims); 
+    void Search(const float* qdata, const int num_queries, const int topk, const int ef_search,
+    int* nns, float* distances, int* found_cnt);
+};
 } // namespace cuhnsw

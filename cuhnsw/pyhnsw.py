@@ -12,7 +12,7 @@ import tempfile
 import numpy as np
 
 from cuhnsw import aux
-from cuhnsw.cuhnsw_bind import CuHNSWBind
+from cuhnsw_bind import CuHNSWBind
 
 EPS = 1e-10
 WARP_SIZE = 32

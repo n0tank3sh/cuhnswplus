@@ -72,7 +72,7 @@ class CuHNSWBind {
 };
 
 PYBIND11_PLUGIN(cuhnsw_bind) {
-  py::module m("CuHNSWBind");
+  auto m = py::module_::create_extension_module("CuHNSWBind", nullptr, nullptr);
 
   py::class_<CuHNSWBind>(m, "CuHNSWBind")
   .def(py::init())

@@ -34,7 +34,6 @@ class LevelGraph {
     num_nodes_ = nodes_.size();
     neighbors_.clear();
     neighbors_.resize(num_nodes_);
-    std::fill(nodes_idmap_.begin(), nodes_idmap_.end(), -1);
     for (int i = 0; i < num_nodes_; ++i)
       nodes_idmap_[nodes[i]] = i;
   }

@@ -67,8 +67,8 @@ def get_opt_as_proto(raw, proto_type=ConfigProto):
   return proto
 
 def proto_to_dict(proto):
-  return MessageToDict(proto, \
-    including_default_value_fields=True, \
+  return MessageToDict(proto, 
+    including_default_value_fields=True, 
     preserving_proto_field_name=True)
 
 def copy_proto(proto):

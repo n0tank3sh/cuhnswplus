@@ -9,7 +9,7 @@
   "level_mult" : 9,
   "hyper_threads" : 10,
   "block_dim" : 32,
-  "dist_type" : "dot",
+  "dist_type" : "l2",
   "visited_list_size" : 8192,
   "heuristic_coef" : 0.25
 }

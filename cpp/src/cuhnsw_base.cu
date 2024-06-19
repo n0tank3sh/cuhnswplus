@@ -81,15 +81,14 @@ bool CuHNSW::Init(std::string opt_path) {
   max_m0_ = opt_["max_m0"].int_value();
   save_remains_ = opt_["save_remains"].bool_value();
   ef_construction_ = opt_["ef_construction"].int_value();
-  level_mult_ = opt_["level_mult"].number_value();
+  //level_mult_ = opt_["level_mult"].number_value();
+  level_mult_ = 1/log(max_m_);
   batch_size_ = opt_["batch_size"].int_value();
   block_dim_ = opt_["block_dim"].int_value();
   visited_table_size_ = opt_["visited_table_size"].int_value();
   visited_list_size_ = opt_["visited_list_size"].int_value(); 
   block_cnt_ = opt_["hyper_threads"].number_value() * (cores_ / block_dim_);
   max_elements_ = opt_["max_elements"].int_value();
-  std::cout << max_elements_ <<std::endl;
-  std::cout << max_m_ << std::endl;
 
   if (not visited_table_size_)
     visited_table_size_ = visited_list_size_ * 2;
@@ -114,6 +113,7 @@ bool CuHNSW::Init(std::string opt_path) {
 }
 
 void CuHNSW::SetData(const float* data, int num_data, int num_dims) {
+  max_elements_ = num_data;
   num_data_ = num_data;
   num_dims_ = num_dims;
   device_data_.resize(num_data * num_dims);
@@ -135,7 +135,6 @@ void CuHNSW::SetData(const float* data, int num_data, int num_dims) {
 void CuHNSW::SetRandomLevels(const int* levels) {
   levels_.resize(num_data_);
   DEBUG("set levels of data (length: {})", num_data_)
-  max_level_ = 0;
   std::vector<std::vector<int>> level_nodes(1);
   for (int i = 0; i < num_data_; ++i) {
     levels_[i] = levels[i];

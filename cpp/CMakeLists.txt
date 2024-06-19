@@ -2,7 +2,9 @@ set(SOURCE_FILES
         src/cuhnsw_base.cu
         src/cuhnsw_build.cu
         src/cuhnsw_search.cu
-        src/log.cc)
+        src/log.cc
+        src/index.cpp
+        )
 set(HEADER_FILES
         include/cuda_base_kernels.cuh
         include/cuda_build_kernels.cuh

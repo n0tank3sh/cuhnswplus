@@ -3,3 +3,7 @@
 env/
 build/
 3rd/
+__pycache__/
+cuhnsw.egg-info/
+dist/
+res/
