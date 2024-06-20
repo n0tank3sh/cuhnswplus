@@ -7,15 +7,16 @@
 #include <random>
 
 namespace cuhnsw {
-  Index::Index(std::string storage_prefix, std::string config_file, int shard)
+  constexpr uint32_t BLOCK_SIZE = 15000;
+  Index::Index(std::string storage_prefix, std::string config_file)
     :
     storage_prefix(storage_prefix), 
-    config_file(config_file),
-    shard_size(shard) 
+    config_file(config_file)
     {}
 
   void Index::SetData(const float* data, int num_data, int dims) {
     int offset = 0;
+    shard_size = BLOCK_SIZE / dims;
     clusters = std::ceil((double)num_data/shard_size);
     for(int i = 0; i < clusters; i++) {
       std::string file_name = "data_" + std::to_string(i) + ".bin";
@@ -26,8 +27,8 @@ namespace cuhnsw {
       std::ofstream ofs(file_name, std::ios_base::binary | std::iostream::trunc);
       ofs.write(reinterpret_cast<const char*>(&shard_size), sizeof(int));
       ofs.write(reinterpret_cast<const char*>(&dims), sizeof(int));
-      ofs.write(reinterpret_cast<const char*>(&data[offset + i * shard_size]), sizeof(float) * (std::min(shard_size, num_data - offset)));
-      offset += std::min(shard_size, num_data - offset);
+      ofs.write(reinterpret_cast<const char*>(&data[offset]), sizeof(float) * (std::min(shard_size, num_data - (i * shard_size)) * dims));
+      offset += shard_size * dims;
       ofs.close();
     }
   }
@@ -37,7 +38,7 @@ namespace cuhnsw {
     std::mt19937 level_generator;
     std::uniform_real_distribution distrib;
     std::vector<std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, 
-    std::less<std::pair<float, int>>>> pq_list(num_queries);
+    std::greater<std::pair<float, int>>>> pq_list(num_queries);
 
     for(int cluster = 0; cluster < clusters; cluster++) {
       std::vector<float> cluster_dist(num_queries * topk);
@@ -72,24 +73,22 @@ namespace cuhnsw {
           found_cnt[q] += cluster_found_cnt[q];
           found_cnt[q] = std::min(topk, found_cnt[q]);
           int global_id = cluster_nns[topk * q + j] + (cluster * shard_size);
-          std::cout << cluster_dist[topk * q + j] << ',';
           pq_list[q].push(std::make_pair(cluster_dist[topk * q + j], global_id));
-          std::cout << cluster_nns[ topk * q + j] + (cluster * shard_size) << ',';
         }
       }
-
-      std::cout << std::endl;
       ifs.close();
     }
     for(int i = 0; i < num_queries; i++) {
       int j = 0;
       while(j < topk) {
         auto p = pq_list[i].top();
+        std::cout << p.first << ':' << p.second << ';';
         pq_list[i].pop();
         nns[i * topk + j] = p.second;
         distances[i * topk + j] = p.first;
         j++;
       }
+      std::cout << std::endl;
     }
   }
 }

@@ -75,8 +75,6 @@ bool CuHNSW::Init(std::string opt_path) {
   auto _opt = json11::Json::parse(str, err_cmt);
   if (not err_cmt.empty()) return false;
   opt_ = _opt;
-  std::cout << "Json file: " << std::endl;
-  std::cout << opt_.dump() << std::endl;
   max_m_ = opt_["max_m"].int_value();
   max_m0_ = opt_["max_m0"].int_value();
   save_remains_ = opt_["save_remains"].bool_value();

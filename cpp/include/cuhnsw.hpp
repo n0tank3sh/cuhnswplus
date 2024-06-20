@@ -129,7 +129,7 @@ class Index {
     std::vector<CuHNSW> graphs;
     std::vector<int> index;
 public:
-    Index(std::string storage_prefix, std::string config_file, int shard_size);
+    Index(std::string storage_prefix, std::string config_file);
     void SetData(const float* data, int num_data, int dims); 
     void Search(const float* qdata, const int num_queries, const int topk, const int ef_search,
     int* nns, float* distances, int* found_cnt);
