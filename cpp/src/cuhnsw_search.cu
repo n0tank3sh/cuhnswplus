@@ -12,7 +12,7 @@ void CuHNSW::GetEntryPoints(
 
   
   // copy to gpu mem
-  thrust::device_vector<int> dev_nodes(max_size), dev_entries(max_size);
+  thrust::device_vector<int> dev_nodes(size), dev_entries(size);
   thrust::device_vector<int> dev_upper_nodes(max_size), dev_deg(max_size);
   thrust::device_vector<int> dev_neighbors(max_size * max_m_);
  
@@ -23,7 +23,6 @@ void CuHNSW::GetEntryPoints(
 
   // run kernel
   for(int l = max_level_; l > level; l--) {   
-    const std::vector<int>& nodes = level_graphs_[l - 1].GetNodes();
     LevelGraph& graph = level_graphs_[l];
     const std::vector<int>& upper_nodes = graph.GetNodes();
     int upper_size = upper_nodes.size();

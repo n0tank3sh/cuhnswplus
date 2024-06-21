@@ -7,7 +7,7 @@
 #include <random>
 
 namespace cuhnsw {
-  constexpr uint32_t BLOCK_SIZE = 15000;
+  constexpr uint32_t BLOCK_SIZE = 25000000;
   Index::Index(std::string storage_prefix, std::string config_file)
     :
     storage_prefix(storage_prefix), 
@@ -16,7 +16,7 @@ namespace cuhnsw {
 
   void Index::SetData(const float* data, int num_data, int dims) {
     int offset = 0;
-    shard_size = BLOCK_SIZE / dims;
+    shard_size = BLOCK_SIZE / (dims * sizeof(float));
     clusters = std::ceil((double)num_data/shard_size);
     for(int i = 0; i < clusters; i++) {
       std::string file_name = "data_" + std::to_string(i) + ".bin";
