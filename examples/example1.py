@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 import hnswlib
-from cuhnsw import aux, CuHNSW
+from cuhnsw import aux, CuHNSW, CuHNSWIndex
 
 LOGGER = aux.get_logger()
 

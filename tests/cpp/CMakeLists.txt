@@ -13,7 +13,7 @@ target_link_libraries(index_test PRIVATE
     GTest::gtest_main
 )
 
-configure_file(TestConfig.json ${CMAKE_BINARY_DIR}/tests/TestConfig.json COPYONLY)
+configure_file(TestConfig.json ${CMAKE_BINARY_DIR}/tests/cpp/TestConfig.json COPYONLY)
 
 include(GoogleTest)
 gtest_discover_tests(add_point_test)

@@ -11,12 +11,34 @@ import tempfile
 
 import numpy as np
 
+from CuHNSWBind import IndexBind, CuHNSWBind
+
 from cuhnsw import aux
-from cuhnsw_bind import CuHNSWBind
 
 EPS = 1e-10
 WARP_SIZE = 32
 DIST_ALIAS = {"ip": "dot", "euclidean": "l2", "cosine": "dot"}
+
+
+class CuHNSWIndex:
+  def __init__(self, storage_prefix, config_file):
+    self.obj = IndexBind(storage_prefix, config_file)
+
+  def set_data(self, data):
+    self.data = data.copy()
+    num_data, dims = self.data.shape
+    self.obj.set_data(data)
+
+  def search(self, qdata, topk, ef_search):
+    ef_search = max(topk, ef_search)
+    qdata = qdata.astype(np.float32)
+    num_queries = qdata.shape[0]
+    nns = np.empty(shape=(num_queries, topk), dtype=np.int32)
+    distances = np.empty(shape=(num_queries, topk), dtype=np.float32)
+    found_cnt = np.empty(shape=(num_queries,), dtype=np.int32)
+    self.obj.search(qdata, topk, ef_search,
+                        nns, distances, found_cnt)
+    return nns, distances, found_cnt
 
 
 class CuHNSW:

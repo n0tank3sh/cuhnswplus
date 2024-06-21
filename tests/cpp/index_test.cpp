@@ -8,12 +8,12 @@ TEST(Index_test, Index_SetData) {
   cuhnsw::Index index("./testdata/", "TestConfig.json");
   int dim = 32 * 32 * 3;
   std::vector<float> test_data;
-  for(int i = 0; i < 100; i++) {
+  for(int i = 0; i < 10000; i++) {
     for(int j = 0; j < dim; j++) {
       test_data.push_back(distrib(rnd));
     }
   }
-  index.SetData(&test_data[0], 100, dim);
+  index.SetData(&test_data[0], test_data.size()/dim, dim);
   std::vector<int> nns(4 * 10);
   std::vector<float> distances(4 * 10);
   std::vector<int> found_cnt(4);

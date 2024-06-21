@@ -71,24 +71,62 @@ class CuHNSWBind {
   cuhnsw::CuHNSW obj_;
 };
 
-PYBIND11_PLUGIN(cuhnsw_bind) {
-  auto m = py::module_::create_extension_module("CuHNSWBind", nullptr, nullptr);
+class IndexBind { 
+public:
+  IndexBind(std::string storage_prefix, std::string config_file) 
+  :
+  index(storage_prefix, config_file)
+  {}
+  void SetData(py::object& input) {
+    float_array array(input);
+    auto buffer = array.request();
+    if (buffer.ndim != 2) throw std::runtime_error("data must be 2d array");
+    int num_data = buffer.shape[0];
+    int num_dims = buffer.shape[1];
+    index.SetData(array.data(0), num_data, num_dims);
+  }
+  void Search(py::object& qdata, int topk, int ef_search,
+    py::object& nns, py::object& distances, py::object& found_cnt) {
+    float_array _qdata(qdata);
+    int_array _nns(nns);
+    float_array _distances(distances);
+    int_array _found_cnt(found_cnt);
+    auto buffer = _qdata.request();
 
+    if (buffer.ndim != 1 and buffer.ndim != 2)
+      throw std::runtime_error("data array must be 1d / 2d shape");
+
+    int num_queries = buffer.ndim == 1? 1: buffer.shape[0];
+    index.Search(_qdata.data(0), num_queries, topk, ef_search,
+        _nns.mutable_data(0), _distances.mutable_data(0), _found_cnt.mutable_data(0));
+  }
+private:
+  cuhnsw::Index index;
+};
+
+PYBIND11_MODULE(CuHNSWBind, m) {
   py::class_<CuHNSWBind>(m, "CuHNSWBind")
-  .def(py::init())
-  .def("init", &CuHNSWBind::Init, py::arg("opt_path"))
-  .def("set_data", &CuHNSWBind::SetData, py::arg("data"))
-  .def("build_graph", &CuHNSWBind::BuildGraph)
-  .def("set_random_levels", &CuHNSWBind::SetRandomLevels, py::arg("levels"))
-  .def("save_index", &CuHNSWBind::SaveIndex, py::arg("fpath"))
-  .def("load_index", &CuHNSWBind::LoadIndex, py::arg("fpath"))
-  .def("search_knn", &CuHNSWBind::SearchGraph,
+    .def(py::init<>())
+    .def("init", &CuHNSWBind::Init, py::arg("opt_path"))
+    .def("set_data", &CuHNSWBind::SetData, py::arg("data"))
+    .def("build_graph", &CuHNSWBind::BuildGraph)
+    .def("set_random_levels", &CuHNSWBind::SetRandomLevels, py::arg("levels"))
+    .def("save_index", &CuHNSWBind::SaveIndex, py::arg("fpath"))
+    .def("load_index", &CuHNSWBind::LoadIndex, py::arg("fpath"))
+    .def("search_knn", &CuHNSWBind::SearchGraph,
       py::arg("qdata"), py::arg("topk"), py::arg("ef_search"),
       py::arg("nns"), py::arg("distances"), py::arg("found"))
-  .def("__repr__",
-  [](const CuHNSWBind &a) {
-    return "<CuHNSWBind>";
-  }
-  );
-  return m.ptr();
+    .def("__repr__", [](const CuHNSWBind &a) {
+        return "<CuHNSWBind>";
+    });
+
+  py::class_<IndexBind>(m, "IndexBind")
+    .def(py::init<const std::string&, const std::string&>())
+    .def("set_data", &IndexBind::SetData, py::arg("data"))
+    .def("search", &IndexBind::Search, 
+      py::arg("qdata"), py::arg("topk"), py::arg("ef_search"),
+      py::arg("nns"), py::arg("distances"), py::arg("found"))
+    .def("__repr__", [](const IndexBind &a) {
+        return "<IndexBind>";
+  });
 }
