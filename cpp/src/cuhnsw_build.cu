@@ -191,17 +191,6 @@ void CuHNSW::BuildLevelGraph(int level) {
     int64_t full_visited_cnt = std::accumulate(acc_visited_cnt.begin(), acc_visited_cnt.end(), 0LL);
     DEBUG("full number of visited nodes: {}", full_visited_cnt);
 
-    //for (auto& node: graph.GetNodes()) {
-      //graph.ClearEdges(node);
-    //}
-    //for (int i = 0; i < size; ++i) {
-      //int src = nodes[i];
-      //for (int j = 0; j < deg[i]; ++j) {
-        //int dst = nodes[graph_vec[i * max_m + j]];
-        //float dist = distances[i * max_m + j];
-        //graph.AddEdge(src, dst, dist);
-      //}
-    //}
     graph.UnLoadGraphVec(graph_vec, deg, distances, max_m);
   }
 }

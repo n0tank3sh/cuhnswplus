@@ -88,7 +88,7 @@ class LevelGraph {
       }
     };
     auto& thread_pool = ThreadPoolSingleton::get_instance();
-    int num_thread = 12;
+    int num_thread = thread_pool.get_thread_count();
     int chunk_size = (nodes.size() + num_thread - 1)/num_thread;
     for(int i = 0; i < num_thread; i++) {
       int start = i * chunk_size;
@@ -109,7 +109,7 @@ class LevelGraph {
       }
     };  
     auto& thread_pool = ThreadPoolSingleton::get_instance();
-    int num_thread = 12;
+    int num_thread = thread_pool.get_thread_count();
     int chunk_size = (nodes.size() + num_thread - 1)/num_thread;
     for(int i = 0; i < num_thread; i++) {
       int start = i * chunk_size;
