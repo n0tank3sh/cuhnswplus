@@ -20,5 +20,5 @@ set(HEADER_FILES
         )
 add_library(cuhnsw ${SOURCE_FILES})
 set_target_properties(cuhnsw PROPERTIES CUDA_ARCHITECTURES "all-major")
-target_include_directories(cuhnsw PUBLIC include/)
+target_include_directories(cuhnsw PUBLIC include/ ../3rd/thread-pool/include)
 target_link_libraries(cuhnsw json11 spdlog CCCL::CCCL CUDA::cudart CUDA::cufft)

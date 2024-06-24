@@ -28,14 +28,8 @@ void CuHNSW::GetEntryPoints(
     int upper_size = upper_nodes.size();
     std::vector<int> deg(upper_size);
     std::vector<int> neighbors(upper_size * max_m_);
-    for (int i = 0; i < upper_size; ++i) {
-      const std::vector<std::pair<float, int>>& _neighbors = graph.GetNeighbors(upper_nodes[i]);
-      deg[i] = _neighbors.size();
-      int offset = max_m_ * i;
-      for (int j = 0; j < deg[i]; ++j) {
-        neighbors[offset + j] = graph.GetNodeId(_neighbors[j].second);
-      }
-    }
+    graph.LoadGraphVec(neighbors, deg, max_m_);
+
     for (int i = 0; i < size; ++i) {
       int entryid = graph.GetNodeId(entries[i]); 
       entries[i] = entryid;
@@ -94,14 +88,8 @@ void CuHNSW::SearchGraph(const float* qdata, const int num_queries, const int to
   std::vector<int> graph_vec(max_m0_ * num_data_);
   std::vector<int> deg(num_data_);
   LevelGraph graph = level_graphs_[0];
-  for (int i = 0; i < num_data_; ++i) {
-    const std::vector<std::pair<float, int>>& neighbors = graph.GetNeighbors(i);
-    int nbsize = neighbors.size();
-    int offset = i * max_m0_;
-    for (int j = 0; j < nbsize; ++j)
-      graph_vec[offset + j] = neighbors[j].second;
-    deg[i] = nbsize;
-  }
+  graph.LoadGraphVec(graph_vec, deg, max_m0_);
+
   
   thrust::device_vector<int> device_graph(max_m0_ * num_data_);
   thrust::device_vector<int> device_deg(num_data_);

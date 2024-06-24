@@ -48,8 +48,10 @@ TEST(SetData_test, SetData) {
     std::vector<int> nns(100, 0);
     std::vector<float> dist(100, INFINITY);
     std::vector<int> found_cnt(5);
-    client.SearchGraph(&data[14], 5, 20, 30, nns.data(), dist.data(), found_cnt.data());
+    client.SearchGraph(&data[14 * dim], 5, 20, 30, nns.data(), dist.data(), found_cnt.data());
     for(auto e: dist) {
+        std::cout << e << ',';
         EXPECT_NE(e, INFINITY);
     }
+    std::cout << std::endl;
 }

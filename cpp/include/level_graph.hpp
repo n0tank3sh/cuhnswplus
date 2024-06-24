@@ -15,6 +15,7 @@
 #include <functional>
 #include <vector>
 #include <unordered_map>
+#include "thread_pool.hpp"
 
 #include "log.hpp"
 
@@ -72,6 +73,50 @@ class LevelGraph {
             __FILE__, __LINE__, nodeid, node, num_nodes_));
     }
     return nodeid;
+  }
+  
+  void LoadGraphVec(std::vector<int>& graph_vec, std::vector<int>& deg, int max_m) {
+    const std::vector<int>& nodes = GetNodes();
+    auto loader = [&](int start, int end) {
+      if(start >= nodes.size()) return;
+      for(int i = start; i < end; i++) {
+        auto& neighbors = GetNeighbors(nodes[i]);
+        deg[i] = neighbors.size();
+        for(int j = 0; j < deg[i]; j++) {
+          graph_vec[i * max_m + j] = GetNodeId(neighbors[j].second);
+        }
+      }
+    };
+    auto& thread_pool = ThreadPoolSingleton::get_instance();
+    int num_thread = 12;
+    int chunk_size = (nodes.size() + num_thread - 1)/num_thread;
+    for(int i = 0; i < num_thread; i++) {
+      int start = i * chunk_size;
+      int end = std::min((int)nodes.size(), (i + 1) * chunk_size);
+      auto fut = thread_pool.submit_task([loader, start, end]{loader(start, end);});
+    }
+    thread_pool.wait();
+  }
+
+  void UnLoadGraphVec(const std::vector<int>& graph_vec, const std::vector<int>& deg, const std::vector<float>& dist, int max_m) {
+    const std::vector<int>& nodes = GetNodes();
+    auto unloader = [&](int start, int end) {
+      for(int i = start; i < end; i++) {
+        ClearEdges(nodes[i]);
+        for(int j = 0; j < deg[i]; j++) {
+          AddEdge(nodes[i], nodes[graph_vec[i * max_m +j]], dist[i * max_m + j]);
+        }
+      }
+    };  
+    auto& thread_pool = ThreadPoolSingleton::get_instance();
+    int num_thread = 12;
+    int chunk_size = (nodes.size() + num_thread - 1)/num_thread;
+    for(int i = 0; i < num_thread; i++) {
+      int start = i * chunk_size;
+      int end = std::min((int)nodes.size(), (i + 1) * chunk_size);
+      auto fut = thread_pool.submit_task([unloader, start, end]{unloader(start, end);});
+    }
+    thread_pool.wait();
   }
 
   void ShowGraph() {

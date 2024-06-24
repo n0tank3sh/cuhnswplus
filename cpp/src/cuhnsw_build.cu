@@ -133,16 +133,8 @@ void CuHNSW::BuildLevelGraph(int level) {
     std::vector<int> deg(size, 0);
     if (l < max_level_) {
       LevelGraph& upper_graph = level_graphs_[l + 1];
-      for (auto& node: upper_graph.GetNodes()) {
-        upper_nodes.insert(node);
-        int srcid = graph.GetNodeId(node);
-        int idx = 0;
-        for (auto& nb: upper_graph.GetNeighbors(node)) {
-          int dstid = graph.GetNodeId(nb.second);
-          graph_vec[max_m * srcid + (idx++)] = dstid;
-        }
-        deg[srcid] = idx;
-      }
+      upper_graph.LoadGraphVec(graph_vec, deg, max_m);
+
     }
 
     for (auto& node: graph.GetNodes()) {
@@ -199,17 +191,18 @@ void CuHNSW::BuildLevelGraph(int level) {
     int64_t full_visited_cnt = std::accumulate(acc_visited_cnt.begin(), acc_visited_cnt.end(), 0LL);
     DEBUG("full number of visited nodes: {}", full_visited_cnt);
 
-    for (auto& node: graph.GetNodes()) {
-      graph.ClearEdges(node);
-    }
-    for (int i = 0; i < size; ++i) {
-      int src = nodes[i];
-      for (int j = 0; j < deg[i]; ++j) {
-        int dst = nodes[graph_vec[i * max_m + j]];
-        float dist = distances[i * max_m + j];
-        graph.AddEdge(src, dst, dist);
-      }
-    }
+    //for (auto& node: graph.GetNodes()) {
+      //graph.ClearEdges(node);
+    //}
+    //for (int i = 0; i < size; ++i) {
+      //int src = nodes[i];
+      //for (int j = 0; j < deg[i]; ++j) {
+        //int dst = nodes[graph_vec[i * max_m + j]];
+        //float dist = distances[i * max_m + j];
+        //graph.AddEdge(src, dst, dist);
+      //}
+    //}
+    graph.UnLoadGraphVec(graph_vec, deg, distances, max_m);
   }
 }
 

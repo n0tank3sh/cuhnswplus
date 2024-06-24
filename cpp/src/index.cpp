@@ -7,7 +7,7 @@
 #include <random>
 
 namespace cuhnsw {
-  constexpr uint32_t BLOCK_SIZE = 25000000;
+  constexpr uint32_t BLOCK_SIZE = 30000000;
   Index::Index(std::string storage_prefix, std::string config_file)
     :
     storage_prefix(storage_prefix), 
@@ -17,7 +17,7 @@ namespace cuhnsw {
   void Index::SetData(const float* data, int num_data, int dims) {
     int offset = 0;
     shard_size = BLOCK_SIZE / (dims * sizeof(float));
-    clusters = std::ceil((double)num_data/shard_size);
+    clusters = (num_data + shard_size - 1)/shard_size;
     for(int i = 0; i < clusters; i++) {
       std::string file_name = "data_" + std::to_string(i) + ".bin";
       if(!std::filesystem::exists(storage_prefix)) {
@@ -27,7 +27,7 @@ namespace cuhnsw {
       std::ofstream ofs(file_name, std::ios_base::binary | std::iostream::trunc);
       ofs.write(reinterpret_cast<const char*>(&shard_size), sizeof(int));
       ofs.write(reinterpret_cast<const char*>(&dims), sizeof(int));
-      ofs.write(reinterpret_cast<const char*>(&data[offset]), sizeof(float) * (std::min(shard_size, num_data - (i * shard_size)) * dims));
+      ofs.write(reinterpret_cast<const char*>(&data[offset]), sizeof(float) * (std::min(shard_size, num_data - offset/dims) * dims));
       offset += shard_size * dims;
       ofs.close();
     }

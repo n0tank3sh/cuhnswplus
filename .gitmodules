@@ -10,3 +10,6 @@
 [submodule "3rd/cccl"]
 	path = 3rd/cccl
 	url = https://github.com/NVIDIA/cccl.git
+[submodule "3rd/thread-pool"]
+	path = 3rd/thread-pool
+	url = https://github.com/bshoshany/thread-pool.git
