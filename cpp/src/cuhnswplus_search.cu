@@ -1,6 +1,11 @@
-#include "cuhnsw.hpp"
+// Copyright (c) 2020 Jisang Yoon
+// All rights reserved.
+//
+// This source code is licensed under the Apache 2.0 license found in the
+// LICENSE file in the root directory of this source tree.
+#include "cuhnswplus.hpp"
 #include "cuda_search_kernels.cuh"
-namespace cuhnsw {
+namespace cuhnswplus {
 void CuHNSW::GetEntryPoints(
     const std::vector<int>& nodes,
     std::vector<int>& entries,

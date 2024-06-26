@@ -1,6 +1,6 @@
 # CUHNSW
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build Status](https://travis-ci.org/js1010/cuhnsw.svg?branch=main)](https://travis-ci.org/js1010/cuhnsw) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/learn-travis/issues)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build Status](https://travis-ci.org/js1010/cuhnswplus.svg?branch=main)](https://travis-ci.org/js1010/cuhnswplus) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/learn-travis/issues)
 
 Efficient CUDA implementation of Hierarchical Navigable Small World (HNSW) graph algorithm for Approximate Nearest Neighbor (ANN)
 
@@ -35,20 +35,20 @@ Literally, this package is implemented to build HNSW graphs using GPU, and to ap
 1. pip install
 
 ```shell
-pip install cuhnsw
+pip install cuhnswplus
 ```
 
 2. build from source 
 
 ```shell
 # clone repo and submodules
-git clone git@github.com:js1010/cuhnsw.git && cd cuhnsw && git submodule update --init
+git clone git@github.com:js1010/cuhnswplus.git && cd cuhnswplus && git submodule update --init
 
 # install requirements
 pip install -r requirements.txt
 
 # generate proto
-python -m grpc_tools.protoc --python_out cuhnsw/ --proto_path cuhnsw/proto/ config.proto
+python -m grpc_tools.protoc --python_out cuhnswplus/ --proto_path cuhnswplus/proto/ config.proto
 
 # install
 python setup.py install
@@ -61,7 +61,7 @@ python setup.py install
 
 ```python
 import h5py
-from cuhnsw import CuHNSW
+from cuhnswplus import CuHNSW
 
 
 h5f = h5py.File("glove-50-angular.hdf5", "r")
@@ -70,24 +70,24 @@ h5f.close()
 ch0 = CuHNSW(opt={})
 ch0.set_data(data)
 ch0.build()
-ch0.save_index("cuhnsw.index")
+ch0.save_index("cuhnswplus.index")
 ```
 
 - load model and search
 
 ```python
 import h5py
-from cuhnsw import CuHNSW
+from cuhnswplus import CuHNSW
 
 h5f = h5py.File("glove-50-angular.hdf5", "r")
 data = h5f["test"][:, :].astype(np.float32)
 h5f.close()
 ch0 = CuHNSW(opt={})
-ch0.load_index("cuhnsw.index")
+ch0.load_index("cuhnswplus.index")
 nns, distances, found_cnt = ch0.search_knn(data, topk=10, ef_search=300)
 ```
 
-- Option parameters (see `cuhnsw/proto/config.proto`)
+- Option parameters (see `cuhnswplus/proto/config.proto`)
   - `seed`: numpy random seed (used in random levels)
   - `c_log_level`: log level in cpp logging (spdlog)
   - `py_log_level`: log level in python logging
@@ -107,15 +107,15 @@ nns, distances, found_cnt = ch0.search_knn(data, topk=10, ef_search=300)
 ### Performance
 
 - tl;dr
-  - cuhnsw achieved the same build quality by 8-9 times faster build time than hnswlib with 8 vcpus on certain data and parameter setup
-  - cuhnsw achieved the same search quality by 3-4 times faster search time than hnswlib with 8 vcpus instance on certain data and parameter setup
+  - cuhnswplus achieved the same build quality by 8-9 times faster build time than hnswlib with 8 vcpus on certain data and parameter setup
+  - cuhnswplus achieved the same search quality by 3-4 times faster search time than hnswlib with 8 vcpus instance on certain data and parameter setup
 - Note1: HNSW search algorithm can be verified by exact match since it is deterministic. 
-  - I verified it with hnswlib, in other words, cuhnsw search and hnswlib search returns exactly same results by loading the same model file and the same queries and the same ef search.
+  - I verified it with hnswlib, in other words, cuhnswplus search and hnswlib search returns exactly same results by loading the same model file and the same queries and the same ef search.
 - Note2: GPU search has the advantage over CPU search only when it comes to the `Batch` search (i.e. processing large number of queries at once.) 
 - [AWS P3 2xlarge instance](https://aws.amazon.com/ec2/instance-types/p3/) is used to the experiment. (One Tesla V100 GPU with 8 vcpus, 3.06 USD / hr)
 - results can be reproduced by running `example/example1.py`.
 - build time / quality results on glove-50-angular
-  - used `ef_construction`=150 for hnswlib and `ef_construction=110` for cuhnsw to achieve the same build quality
+  - used `ef_construction`=150 for hnswlib and `ef_construction=110` for cuhnswplus to achieve the same build quality
   - build quality is measured by the accuracy by the same search parameter (`ef_search`=300)
   - build time is in seconds
 

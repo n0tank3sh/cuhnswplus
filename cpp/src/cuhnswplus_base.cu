@@ -7,12 +7,12 @@
 #include <algorithm>
 #include <thread>
 
-#include "cuhnsw.hpp"
+#include "cuhnswplus.hpp"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 CuHNSW::CuHNSW() {
-  logger_ = CuHNSWLogger().get_logger();
+  logger_ = CuHNSWPlusLogger().get_logger();
 
   GetDeviceInfo();
   // reference: https://stackoverflow.com/a/32531982
@@ -104,7 +104,7 @@ bool CuHNSW::Init(std::string opt_path) {
     std::string msg(buf);
     throw std::runtime_error(msg);
   }
-  CuHNSWLogger().set_log_level(opt_["c_log_level"].int_value());
+  CuHNSWPlusLogger().set_log_level(opt_["c_log_level"].int_value());
   DEBUG("max_m: {}, max_m0: {}, save_remains: {}, ef_construction: {}, level_mult: {}, dist_type: {}",
       max_m_, max_m0_, save_remains_, ef_construction_, level_mult_, dist_type);
   return true;
@@ -366,4 +366,4 @@ void CuHNSW::LoadIndex(std::string fpath) {
   input.close();
 }
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

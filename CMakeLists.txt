@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.29)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
-project(cuhnsw LANGUAGES CUDA CXX)
+project(cuhnswplus LANGUAGES CUDA CXX)
 set(CXX_STANDARD_REQUIRED 17)
 find_package(CUDAToolkit REQUIRED)
-add_subdirectory(cuhnsw)
+add_subdirectory(cuhnswplus)
 add_subdirectory(tests/cpp)
 add_subdirectory(cpp)
 add_subdirectory(3rd/json11)

@@ -1,14 +1,14 @@
 enable_testing()
 add_executable(add_point_test add_point_test.cpp)
 target_link_libraries(add_point_test PRIVATE
-    cuhnsw
+    cuhnswplus
     CUDA::cudart
     GTest::gtest_main
 )
 
 add_executable(index_test index_test.cpp)
 target_link_libraries(index_test PRIVATE
-    cuhnsw
+    cuhnswplus
     CUDA::cudart
     GTest::gtest_main
 )

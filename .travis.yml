@@ -35,7 +35,7 @@ before_install:
   - export CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
   - export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
   - export PATH=${CUDA_HOME}/bin:${PATH}
-  - python3.6 -m grpc_tools.protoc --python_out cuhnsw/ --proto_path cuhnsw/proto/ config.proto
+  - python3.6 -m grpc_tools.protoc --python_out cuhnswplus/ --proto_path cuhnswplus/proto/ config.proto
 
 script:
   - sudo python3.6 setup.py install

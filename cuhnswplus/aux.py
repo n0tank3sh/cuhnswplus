@@ -10,7 +10,7 @@ import logging.handlers
 
 import jsmin
 from google.protobuf.json_format import Parse, MessageToDict
-from cuhnsw.config_pb2 import ConfigProto
+from cuhnswplus.config_pb2 import ConfigProto
 
 # get_logger and Option refer to
 # https://github.com/kakao/buffalo/blob/

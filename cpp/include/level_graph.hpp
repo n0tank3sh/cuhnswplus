@@ -19,12 +19,12 @@
 
 #include "log.hpp"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 class LevelGraph {
  public:
   explicit LevelGraph(int max_elements = 0) {
-    logger_ = CuHNSWLogger().get_logger();
+    logger_ = CuHNSWPlusLogger().get_logger();
     nodes_idmap_.resize(max_elements , -1);
   }
 
@@ -140,4 +140,4 @@ class LevelGraph {
   std::vector<int> nodes_idmap_;
 };  // class LevelGraph
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

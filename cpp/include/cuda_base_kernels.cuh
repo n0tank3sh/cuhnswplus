@@ -23,7 +23,7 @@
 
 #include "types.hpp"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 // Error Checking utilities, checks status codes from cuda calls
 // and throws exceptions on failure (which cython can proxy back to python)
@@ -36,4 +36,4 @@ inline void checkCuda(cudaError_t code, const char *file, int line) {
   }
 }
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

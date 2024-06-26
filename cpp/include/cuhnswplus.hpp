@@ -33,7 +33,7 @@
 // #include "stop_watch.hpp"
 #include "types.hpp"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 // for the compatibility with hnswlib
 // following two functions refer to
@@ -134,4 +134,4 @@ public:
     void Search(const float* qdata, const int num_queries, const int topk, const int ef_search,
     int* nns, float* distances, int* found_cnt);
 };
-} // namespace cuhnsw
+} // namespace cuhnswplus

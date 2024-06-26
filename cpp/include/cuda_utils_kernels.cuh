@@ -9,7 +9,7 @@
 #include "cuda_heap_kernels.cuh"
 
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 __inline__ __device__
 int warp_reduce_cand(const Neighbor* pq, int cand, const bool reverse) {
@@ -227,4 +227,4 @@ void PushNodeToSearchPq(Neighbor* pq, int* size, const int max_size,
 }
 
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

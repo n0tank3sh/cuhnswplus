@@ -6,7 +6,7 @@
 #pragma once
 #include "cuda_utils_kernels.cuh"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 __global__ void GetEntryPointsKernel(
   const cuda_scalar* qdata, const int* qnodes, const cuda_scalar* target_data, const int* target_nodes,
@@ -166,4 +166,4 @@ __global__ void SearchGraphKernel(
 
 
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

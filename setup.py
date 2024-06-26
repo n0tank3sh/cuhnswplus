@@ -52,10 +52,10 @@ class build_ext(build_ext_orig):
 
 
 setup(
-    name='cuhnsw',
+    name='cuhnswplus',
     version='0.1',
-    packages=['cuhnsw'],
-    ext_modules=[CMakeExtension('cuhnsw')],
+    packages=['cuhnswplus'],
+    ext_modules=[CMakeExtension('cuhnswplus')],
     cmdclass={
         'build_ext': build_ext,
     }

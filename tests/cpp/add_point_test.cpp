@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <cuhnsw.hpp>
+#include <cuhnswplus.hpp>
 #include <random>
 
 TEST(AddPoint_test, AddPoint) {
-    cuhnsw::CuHNSW client;
+    cuhnswplus::CuHNSW client;
     EXPECT_TRUE(client.Init("TestConfig.json"));
     std::mt19937 gen;
     std::uniform_real_distribution distrib(0.0, 1.0);
@@ -27,7 +27,7 @@ TEST(AddPoint_test, AddPoint) {
 }
 
 TEST(SetData_test, SetData) {  
-    cuhnsw::CuHNSW client;
+    cuhnswplus::CuHNSW client;
     EXPECT_TRUE(client.Init("TestConfig.json"));
     std::mt19937 gen;
     std::uniform_real_distribution distrib(0.0, 1.0);

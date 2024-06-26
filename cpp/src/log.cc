@@ -7,18 +7,18 @@
 // reference: https://github.com/kakao/buffalo/blob/5f571c2c7d8227e6625c6e538da929e4db11b66d/lib/misc/log.cc
 #include "log.hpp"
 
-int CuHNSWLogger::global_logging_level_ = 2;
+int CuHNSWPlusLogger::global_logging_level_ = 2;
 
-CuHNSWLogger::CuHNSWLogger() {
+CuHNSWPlusLogger::CuHNSWPlusLogger() {
   spdlog::set_pattern("[%^%-8l%$] %Y-%m-%d %H:%M:%S %v");
   logger_ = spdlog::default_logger();
 }
 
-std::shared_ptr<spdlog::logger>& CuHNSWLogger::get_logger() {
+std::shared_ptr<spdlog::logger>& CuHNSWPlusLogger::get_logger() {
   return logger_;
 }
 
-void CuHNSWLogger::set_log_level(int level) {
+void CuHNSWPlusLogger::set_log_level(int level) {
   global_logging_level_ = level;
   switch (level) {
     case 0: spdlog::set_level(spdlog::level::off); break;
@@ -29,6 +29,6 @@ void CuHNSWLogger::set_log_level(int level) {
   }
 }
 
-int CuHNSWLogger::get_log_level() {
+int CuHNSWPlusLogger::get_log_level() {
   return global_logging_level_;
 }

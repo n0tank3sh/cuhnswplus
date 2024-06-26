@@ -27,9 +27,9 @@
 #define TRACE0(x) logger_->trace("[{}:{}] " x "\n", __FILENAME__, __LINE__);
 #define CRITICAL0(x) logger_->critical("[{}:{}] " x "\n", __FILENAME__, __LINE__);
 
-class CuHNSWLogger {
+class CuHNSWPlusLogger {
  public:
-  CuHNSWLogger();
+  CuHNSWPlusLogger();
   std::shared_ptr<spdlog::logger>& get_logger();
   void set_log_level(int level);
   int get_log_level();

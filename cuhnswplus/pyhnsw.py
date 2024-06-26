@@ -13,7 +13,7 @@ import numpy as np
 
 from CuHNSWBind import IndexBind, CuHNSWBind
 
-from cuhnsw import aux
+from cuhnswplus import aux
 
 EPS = 1e-10
 WARP_SIZE = 32
@@ -54,7 +54,7 @@ class CuHNSW:
     if self.opt.dist_type == "cosine":
       self.opt.nrz = True
 
-    self.logger = aux.get_logger("cuhnsw", self.opt.py_log_level)
+    self.logger = aux.get_logger("cuhnswplus", self.opt.py_log_level)
     tmp = tempfile.NamedTemporaryFile(mode='w', delete=False)
     opt_content = json.dumps(aux.proto_to_dict(self.opt), indent=2)
     tmp.write(opt_content)

@@ -8,7 +8,7 @@
 #include <pybind11/stl.h>
 
 #include <iostream>
-#include "cuhnsw.hpp"
+#include "cuhnswplus.hpp"
 
 namespace py = pybind11;
 
@@ -68,7 +68,7 @@ class CuHNSWBind {
   }
 
  private:
-  cuhnsw::CuHNSW obj_;
+  cuhnswplus::CuHNSW obj_;
 };
 
 class IndexBind { 
@@ -101,7 +101,7 @@ public:
         _nns.mutable_data(0), _distances.mutable_data(0), _found_cnt.mutable_data(0));
   }
 private:
-  cuhnsw::Index index;
+  cuhnswplus::Index index;
 };
 
 PYBIND11_MODULE(CuHNSWBind, m) {

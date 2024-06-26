@@ -7,7 +7,7 @@
 #include "cuda_base_kernels.cuh"
 
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 // https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 __inline__ __device__
@@ -156,4 +156,4 @@ __inline__ __device__ void BatchDistanceKernel(
 }
 
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

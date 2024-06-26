@@ -6,7 +6,7 @@
 #pragma once
 #include "cuda_utils_kernels.cuh"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 __inline__ __device__
 bool IsNeighbor(const int* graph, const int deg, const int dstid) {
   
@@ -337,4 +337,4 @@ __global__ void BuildLevelGraphKernel(
   // g.sync();
 }
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

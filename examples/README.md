@@ -25,20 +25,20 @@ python example1.py download
 python example1.py run_gpu_training
 ```
 
-4. check the saved index (filename: `cuhnsw.index`)
+4. check the saved index (filename: `cuhnswplus.index`)
 
 
 
-5. search the nearest neighbors loading the file in cuhnsw (GPU)
+5. search the nearest neighbors loading the file in cuhnswplus (GPU)
 
 ```shell
-python example1.py run_gpu_inference --index-file=cuhnsw.index --topk=10
+python example1.py run_gpu_inference --index-file=cuhnswplus.index --topk=10
 ```
 
 6. you can also search the nearest neighbor by hnswlib (CPU)
 
 ```shell
-python example1.py run_cpu_inference --index-file=cuhnsw.index --topk=10
+python example1.py run_cpu_inference --index-file=cuhnswplus.index --topk=10
 ```
 
 7. reproduce the experimental results shown in README.md on the root directory

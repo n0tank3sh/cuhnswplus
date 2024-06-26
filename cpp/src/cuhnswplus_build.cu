@@ -8,10 +8,10 @@
 #include <random>
 #include <cmath>
 
-#include "cuhnsw.hpp"
+#include "cuhnswplus.hpp"
 #include "cuda_build_kernels.cuh"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 void CuHNSW::GetDeviceInfo() {
   CHECK_CUDA(cudaGetDevice(&devId_));
@@ -233,4 +233,4 @@ void CuHNSW::AddPoints(const float* qdata, int* levels, int* labels, int num_poi
   }
 }
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

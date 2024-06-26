@@ -6,7 +6,7 @@
 #pragma once
 #include "cuda_base_kernels.cuh"
 
-namespace cuhnsw {
+namespace cuhnswplus {
 
 // pop and push for heap
 // reference: https://github.com/NVlabs/nvbio/blob/master/nvbio/basic/priority_queue_inline.h
@@ -48,4 +48,4 @@ void PqPush(Neighbor* pq, int* size,
   (*size)++;
 }
 
-} // namespace cuhnsw
+} // namespace cuhnswplus

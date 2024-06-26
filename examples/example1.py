@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 import hnswlib
-from cuhnsw import aux, CuHNSW, CuHNSWIndex
+from cuhnswplus import aux, CuHNSW, CuHNSWIndex
 
 LOGGER = aux.get_logger()
 
@@ -32,7 +32,7 @@ DIST_TYPE = "cosine"
 BARRIER_SIZE = 100
 RES_DIR = "res"
 INDEX_FILE = "hnswlib.index"
-CUHNSW_INDEX_FILE = "cuhnsw.index"
+CUHNSW_INDEX_FILE = "cuhnswplus.index"
 HNSWLIB_INDEX_FILE = "hnswlib.index"
 DATA_URL = f"http://ann-benchmarks.com/{DATA_FILE}"
 NRZ = DIST_TYPE == "cosine"
@@ -147,7 +147,7 @@ def run_gpu_inference(topk=100, index_file=INDEX_FILE, ef_search=300):
   index_path = pjoin(RES_DIR, index_file)
   LOGGER.info("gpu inference on %s with index %s", data_path, index_path)
   ch0 = CuHNSW(OPT)
-  LOGGER.info("load model from %s by cuhnsw", index_path)
+  LOGGER.info("load model from %s by cuhnswplus", index_path)
   ch0.load_index(index_path)
 
   h5f = h5py.File(data_path, "r")
@@ -171,13 +171,13 @@ def run_gpu_inference(topk=100, index_file=INDEX_FILE, ef_search=300):
   LOGGER.info("accuracy mean: %.4e, std: %.4e", np.mean(accs), np.std(accs))
   return el0, np.mean(accs)
 
-def run_gpu_inference2(topk=5, index_file="cuhnsw.index", ef_search=300):
+def run_gpu_inference2(topk=5, index_file="cuhnswplus.index", ef_search=300):
   print("=" * BARRIER_SIZE)
   data_path = pjoin(RES_DIR, DATA_FILE)
   index_path = pjoin(RES_DIR, index_file)
   LOGGER.info("gpu inference on %s with index %s", data_path, index_path)
   ch0 = CuHNSW(OPT)
-  LOGGER.info("load model from %s by cuhnsw", index_path)
+  LOGGER.info("load model from %s by cuhnswplus", index_path)
   ch0.load_index(index_path)
 
   h5f = h5py.File(data_path, "r")
@@ -204,13 +204,13 @@ def run_gpu_inference2(topk=5, index_file="cuhnsw.index", ef_search=300):
 
 
 def run_gpu_inference_large(topk=100, index_file=INDEX_FILE, ef_search=300,
-                            num_queries=1000000, num_dims=50):
+                            num_queries=10000, num_dims=50):
   print("=" * BARRIER_SIZE)
   index_path = pjoin(RES_DIR, index_file)
   data_path = pjoin(RES_DIR, DATA_FILE)
   LOGGER.info("gpu inference on %s with index %s", data_path, index_path)
   ch0 = CuHNSW(OPT)
-  LOGGER.info("load model from %s by cuhnsw", index_path)
+  LOGGER.info("load model from %s by cuhnswplus", index_path)
   ch0.load_index(index_path)
 
   queries = np.random.normal(size=(num_queries, num_dims)).astype(np.float32)
@@ -238,7 +238,7 @@ def run_gpu_training(ef_const=150):
   start = time.time()
   ch0.build()
   el0 = time.time() - start
-  LOGGER.info("elpased time to build by cuhnsw: %.4e sec", el0)
+  LOGGER.info("elpased time to build by cuhnswplus: %.4e sec", el0)
   index_path = pjoin(RES_DIR, CUHNSW_INDEX_FILE)
   ch0.save_index(index_path)
   return el0
@@ -247,7 +247,7 @@ def measure_build_performance():
   build_time = {"attr": "build time"}
   build_quality = {"attr": "build quality"}
   build_time["gpu"] = run_gpu_training(ef_const=110)
-  _, build_quality["gpu"] = run_gpu_inference(index_file="cuhnsw.index")
+  _, build_quality["gpu"] = run_gpu_inference(index_file="cuhnswplus.index")
   for i in [1, 2, 4, 8]:
     build_time[f"{i} cpu"] = run_cpu_training(ef_const=150, num_threads=i)
     _, build_quality[f"{i} cpu"] = run_cpu_inference(index_file="hnswlib.index")
@@ -258,10 +258,10 @@ def measure_build_performance():
 
 def measure_search_performance():
   search_time = {"attr": "search time"}
-  search_time["gpu"] = run_gpu_inference_large(index_file="cuhnsw.index")
+  search_time["gpu"] = run_gpu_inference_large(index_file="cuhnswplus.index")
   for i in [1, 2, 4, 8]:
     search_time[f"{i} cpu"] = run_cpu_inference_large(
-      index_file="cuhnsw.index", num_threads=i)
+      index_file="cuhnswplus.index", num_threads=i)
   columns = [f"{i} cpu" for i in [1, 2, 4, 8]] + ["gpu"]
   df0 = pd.DataFrame([search_time])
   df0.set_index("attr", inplace=True)

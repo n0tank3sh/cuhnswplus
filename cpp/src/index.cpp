@@ -1,4 +1,9 @@
-#include <cuhnsw.hpp>
+// Copyright (c) 2020 Jisang Yoon
+// All rights reserved.
+//
+// This source code is licensed under the Apache 2.0 license found in the
+// LICENSE file in the root directory of this source tree.
+#include <cuhnswplus.hpp>
 #include <fstream>
 #include <thread>
 #include <log.hpp>
@@ -6,7 +11,7 @@
 #include <filesystem>
 #include <random>
 
-namespace cuhnsw {
+namespace cuhnswplus {
   constexpr uint32_t BLOCK_SIZE = 30000000;
   Index::Index(std::string storage_prefix, std::string config_file)
     :
@@ -37,7 +42,8 @@ namespace cuhnsw {
   int* nns, float* distances, int* found_cnt) {
     std::mt19937 level_generator;
     std::uniform_real_distribution distrib;
-    std::vector<std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, 
+    std::vector<std::pair<float, int>> m_store;
+    std::vector<std::priority_queue<std::pair<float,int>, std::vector<std::pair<float, int>>, 
     std::greater<std::pair<float, int>>>> pq_list(num_queries);
 
     for(int cluster = 0; cluster < clusters; cluster++) {
@@ -56,7 +62,7 @@ namespace cuhnsw {
       ifs.read(reinterpret_cast<char*>(&dims), sizeof(int));
       data = new float[num_data * dims];
       ifs.read(reinterpret_cast<char*>(data), sizeof(float) * dims * num_data);
-      cuhnsw::CuHNSW client;
+      cuhnswplus::CuHNSW client;
       client.Init(config_file);
       client.SetData(data, num_data, dims);
       std::vector<int> levels(num_data);
@@ -73,7 +79,9 @@ namespace cuhnsw {
           found_cnt[q] += cluster_found_cnt[q];
           found_cnt[q] = std::min(topk, found_cnt[q]);
           int global_id = cluster_nns[topk * q + j] + (cluster * shard_size);
-          pq_list[q].push(std::make_pair(cluster_dist[topk * q + j], global_id));
+          float dist = cluster_dist[topk * q + j];
+          pq_list[q].push(std::make_pair(std::abs(dist), m_store.size()));
+          m_store.emplace_back(dist, global_id);
         }
       }
       ifs.close();
@@ -81,14 +89,12 @@ namespace cuhnsw {
     for(int i = 0; i < num_queries; i++) {
       int j = 0;
       while(j < topk) {
-        auto p = pq_list[i].top();
-        std::cout << p.first << ':' << p.second << ';';
+        auto p = m_store[pq_list[i].top().second];
         pq_list[i].pop();
         nns[i * topk + j] = p.second;
         distances[i * topk + j] = p.first;
         j++;
       }
-      std::cout << std::endl;
     }
   }
 }
