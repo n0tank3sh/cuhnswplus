@@ -125,6 +125,7 @@ class CuHNSW {
 class Index {
     int shard_size;
     int clusters;
+    int level_mult;
     std::string storage_prefix, config_file;
     std::vector<CuHNSW> graphs;
     std::vector<int> index;
