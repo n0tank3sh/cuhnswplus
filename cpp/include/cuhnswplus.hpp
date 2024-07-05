@@ -99,7 +99,7 @@ class CuHNSW {
   int num_data_ = 0, num_dims_, batch_size_;
   thrust::device_vector<cuda_scalar> device_data_, device_qdata_;
   std::vector<uint32_t> gpus;
-  std::vector<int> data_;
+  std::vector<float> data_;
   std::vector<int> labels_;
   std::string dir;
   bool labelled_ = false;
@@ -110,7 +110,7 @@ class CuHNSW {
   int shard_size;
   int visited_table_size_, visited_list_size_;
   int max_level_ = -1, max_m_, max_m0_;
-  int max_elements_ = 0;
+  size_t max_elements_ = 0;
   int enter_point_, ef_construction_;
   float level_mult_;
   int dist_type_;

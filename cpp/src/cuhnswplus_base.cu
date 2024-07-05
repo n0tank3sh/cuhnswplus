@@ -165,7 +165,6 @@ void CuHNSW::SaveIndex(std::string fpath) {
   // write meta values
   DEBUG0("write meta values"); 
   size_t data_size = num_dims_ * sizeof(scalar);
-  size_t max_elements = num_data_;
   size_t cur_element_count = num_data_;
   size_t M = max_m_;
   size_t maxM = max_m_;
@@ -182,7 +181,7 @@ void CuHNSW::SaveIndex(std::string fpath) {
   tableint enterpoint_node = enter_point_;
   
   writeBinaryPOD(output, offsetLevel0);
-  writeBinaryPOD(output, max_elements);
+  writeBinaryPOD(output, max_elements_);
   writeBinaryPOD(output, cur_element_count);
   writeBinaryPOD(output, size_data_per_element);
   writeBinaryPOD(output, label_offset);
@@ -211,15 +210,15 @@ void CuHNSW::SaveIndex(std::string fpath) {
     memcpy(data_level0_memory + offset, &size, sizeof(sizeint));
     offset += sizeof(sizeint);
     if (size > 0)
-      memcpy(data_level0_memory + offset, &links[0], sizeof(tableint) * size);
+      memcpy(data_level0_memory + offset, links.data(), sizeof(tableint) * size);
     offset += maxM0 * sizeof(tableint); 
     memcpy(data_level0_memory + offset, &data_[i * num_dims_], data_size);
     offset += data_size;
     labeltype label = i;
     memcpy(data_level0_memory + offset, &label, sizeof(labeltype));
     offset += sizeof(labeltype);
-  }
-  output.write(data_level0_memory, cur_element_count * size_data_per_element);
+  }  
+  output.write(data_level0_memory, cur_element_count * size_data_per_element);  
   
   // write upper layer links
   DEBUG0("write upper layer links");
@@ -255,7 +254,7 @@ void CuHNSW::LoadIndex(std::string fpath) {
   
   // reqd meta values
   DEBUG0("read meta values"); 
-  size_t offsetLevel0, max_elements, cur_element_count;
+  size_t offsetLevel0, cur_element_count;
   size_t size_data_per_element, label_offset, offsetData;
   int maxlevel; 
   tableint enterpoint_node = enter_point_;
@@ -264,7 +263,7 @@ void CuHNSW::LoadIndex(std::string fpath) {
   size_t ef_construction;
 
   readBinaryPOD(input, offsetLevel0);
-  readBinaryPOD(input, max_elements);
+  readBinaryPOD(input, max_elements_);
   readBinaryPOD(input, cur_element_count);
   readBinaryPOD(input, size_data_per_element);
   readBinaryPOD(input, label_offset);
@@ -288,13 +287,13 @@ void CuHNSW::LoadIndex(std::string fpath) {
   DEBUG("meta values loaded, num_data: {}, num_dims: {}, max_m: {}, max_m0: {}, enter_point: {}, max_level: {}",
       num_data_, num_dims_, max_m_, max_m0_, enter_point_, max_level_);
 
-  char* data_level0_memory = (char*) malloc(max_elements * size_data_per_element);
+  char* data_level0_memory = (char*) malloc(max_elements_ * size_data_per_element);
   input.read(data_level0_memory, cur_element_count * size_data_per_element);
   
   // reset level graphs
   level_graphs_.clear();
   level_graphs_.shrink_to_fit();
-  level_graphs_.resize(max_level_ + 1);
+  level_graphs_.resize(max_level_ + 1, LevelGraph(num_data_));
   
   // load data and level0 links
   DEBUG0("load level0 links and data");
@@ -313,7 +312,7 @@ void CuHNSW::LoadIndex(std::string fpath) {
     sizeint deg;
     memcpy(&deg, data_level0_memory + offset, sizeof(sizeint));
     offset += sizeof(sizeint);
-    memcpy(&links[0], data_level0_memory + offset, sizeof(tableint) * max_m0_);
+    memcpy(links.data(), data_level0_memory + offset, sizeof(tableint) * max_m0_);
     for (int j = 0; j < deg; ++j)
       graph0.AddEdge(i, links[j], 0);
     offset += sizeof(tableint) * max_m0_;

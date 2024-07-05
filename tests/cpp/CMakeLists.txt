@@ -13,6 +13,12 @@ target_link_libraries(index_test PRIVATE
     GTest::gtest_main
 )
 
+add_executable(serialization_test serialization_test.cpp)
+target_link_libraries(serialization_test PRIVATE
+    cuhnswplus
+    CUDA::cudart
+    GTest::gtest_main
+)
 configure_file(TestConfig.json ${CMAKE_BINARY_DIR}/tests/cpp/TestConfig.json COPYONLY)
 
 include(GoogleTest)
