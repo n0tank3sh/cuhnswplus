@@ -8,6 +8,10 @@ It is an improved fork of [cuhnsw](https://github.com/js1010/cuhnsw), featuring 
 - **Disk Caching**: Efficient handling of large datasets using disk caching.
 - **API Support**: Added support for `AddPoint` and `AddPoints` functions.
 
+## Cloning
+```sh
+  git clone --recursive https://github.com/n0tank3sh/cuhnswplus.git
+```
 ## Installation
 ### Python: 
 ```sh
